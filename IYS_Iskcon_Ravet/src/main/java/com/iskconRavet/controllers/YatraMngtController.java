@@ -25,7 +25,7 @@ import com.iskconRavet.services.YatraEventService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://iysiskconravetfrontend.vercel.app/")
 @RestController
 @RequestMapping("/iys")
 public class YatraMngtController {
