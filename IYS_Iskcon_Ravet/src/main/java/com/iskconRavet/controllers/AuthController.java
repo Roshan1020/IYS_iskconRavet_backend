@@ -55,38 +55,82 @@ public class AuthController {
     @Value("${app.base-url}")
     private String baseUrl;
 
+	// @PostMapping("/signin")
+	// public ResponseEntity<?> signin(@RequestBody SigninRequest request) {
+	// 	Optional<UserEntity> userOpt = userRepository.findByEmail(request.getEmail());
+	// 	if (userOpt.isEmpty())
+	// 		throw new RuntimeException("Invalid email or password");
+
+	// 	UserEntity user = userOpt.get();
+	// 	if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+	// 		throw new RuntimeException("Invalid email or password");
+	// 	}
+
+	// 	String token = jwtUtil.generateToken(user.getEmail());
+
+	// 	return ResponseEntity.ok(Map.of("token", token, "username", user.getEmail(), "roles", "normalUser", "message",
+	// 			"Login successful"));
+	// }
+
+	// @PostMapping("/signup")
+	// public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
+	// 	if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+	// 		return ResponseEntity.ok("Email already exists");
+	// 	}
+
+	// 	UserRegistrationDto registrationDto = new UserRegistrationDto();
+	// 	registrationDto.setEmail(request.getEmail());
+	// 	registrationDto.setPassword(request.getPassword());
+
+	// 	String baseURL = "http://localhost:5173/";
+	// 	registrationService.register(registrationDto, baseUrl);
+	// 	return ResponseEntity.ok("User registered successfully");
+	// }
+
 	@PostMapping("/signin")
-	public ResponseEntity<?> signin(@RequestBody SigninRequest request) {
-		Optional<UserEntity> userOpt = userRepository.findByEmail(request.getEmail());
-		if (userOpt.isEmpty())
-			throw new RuntimeException("Invalid email or password");
+    public ResponseEntity<?> authenticate(@RequestBody SigninRequest request) {
+        String email = request.getEmail();
+        String password = request.getPassword();
 
-		UserEntity user = userOpt.get();
-		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-			throw new RuntimeException("Invalid email or password");
-		}
+        Optional<UserEntity> userOpt = userRepository.findByEmail(email);
 
-		String token = jwtUtil.generateToken(user.getEmail());
+        if (userOpt.isPresent()) {
+            // User exists → Sign In
+            UserEntity user = userOpt.get();
 
-		return ResponseEntity.ok(Map.of("token", token, "username", user.getEmail(), "roles", "normalUser", "message",
-				"Login successful"));
-	}
+            System.out.println("pass1 "+password);
+            System.out.println("pass2 "+user.getPassword());
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                throw new RuntimeException("Invalid email or password");
+            }
 
-	@PostMapping("/signup")
-	public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
-		if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-			return ResponseEntity.ok("Email already exists");
-		}
+            String token = jwtUtil.generateToken(user.getEmail());
+            return ResponseEntity.ok(Map.of(
+                "token", token,
+                "username", user.getEmail(),
+                "roles", "normalUser",
+                "message", "Login successful"
+            ));
 
-		UserRegistrationDto registrationDto = new UserRegistrationDto();
-		registrationDto.setEmail(request.getEmail());
-		registrationDto.setPassword(request.getPassword());
+        } else {
+            // User doesn't exist → Sign Up
+            UserRegistrationDto registrationDto = new UserRegistrationDto();
+            registrationDto.setEmail(email);
+            registrationDto.setPassword(password); // Important: encode password!
 
-		String baseURL = "http://localhost:5173/";
-		registrationService.register(registrationDto, baseUrl);
-		return ResponseEntity.ok("User registered successfully");
-	}
+            String baseURL = "http://localhost:5173/";
+            registrationService.register(registrationDto, baseURL);
 
+            String token = jwtUtil.generateToken(email);
+            return ResponseEntity.ok(Map.of(
+                "token", token,
+                "username", email,
+                "roles", "normalUser",
+                "message", "User registered and logged in successfully"
+            ));
+        }
+    }
+	
 	@GetMapping("/verify")
 	public ResponseEntity<String> verify(@RequestParam String token) {
 
