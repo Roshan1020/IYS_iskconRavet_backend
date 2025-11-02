@@ -29,7 +29,7 @@ import com.iskconRavet.services.UserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://iysiskconravetfrontend.vercel.app/")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
